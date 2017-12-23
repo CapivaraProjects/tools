@@ -15,7 +15,13 @@ def createNewDirectories(rootImgDir, diseases):
 def moveImagesToHealthyDir(healthy)
 	
 	for sourceDestination in healthy:
-		targetDestination = "%s/healthy".format(sourceDestination) 	
+		# tem que pegar o caminho sem o nome da imagem
+		# domain = sourceDestination...
+		# imgName = sourceDestination...
+		# concatenar /healthy ao domain
+		# healthyDomain = "%s/healthly".format(domain)
+		# concatenar o nome da imagem devolta
+		# targetDestination = "%s/%s'.format(healthyDomain,imgName) 	
 		os.rename(sourceDestination, targetDestination)
 		
 	
@@ -33,6 +39,7 @@ def start_execute(database, table, rootImgDir):
 	for row in cursor.execute("SELECT URL FROM ANNOTATIONS WHERE DISEASE_COMMON_NAME=''"):
 		healthy.append(row)
 	
+	# move as imagens saudaveis para o diretorio healthy
 	moveImagesToHealthyDir(healthy)
 		
 	# obtem imagens com doenca
