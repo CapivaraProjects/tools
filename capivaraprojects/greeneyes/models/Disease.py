@@ -5,3 +5,4 @@ class Disease:
         self.plant = plant
         self.scientificName = scientificName
         self.commonName = commonName
+        self.images = images

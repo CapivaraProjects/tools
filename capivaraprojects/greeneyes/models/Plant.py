@@ -4,5 +4,6 @@ class Plant:
         self.id = id
         self.scientificName = scientificName
         self.commonName = commonName
+        self.diseases = diseases
 
 
