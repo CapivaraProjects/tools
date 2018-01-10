@@ -99,7 +99,7 @@ def organize(database, workdir, output):
         else:
             plants[indexPlant] = plant
 
-    fh.close()
+    filehandler.close()
     return True
 
 if __name__=="__main__":
