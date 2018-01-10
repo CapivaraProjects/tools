@@ -41,7 +41,7 @@ def organize(database, workdir, output):
     plants = []
 
     for row in cursor.execute(
-            "SELECT id, crop_common_name, crop_scientific_name, disease_common_name, disease_scientific_name, url, description, metadata FROM ANNOTATIONS WHERE crop_common_name='Cabbage__red,_white,_Savoy_' or crop_common_name='Gourd';"):
+            "SELECT id, crop_common_name, crop_scientific_name, disease_common_name, disease_scientific_name, url, description, metadata FROM ANNOTATIONS WHERE crop_common_name='Cabbage  red, white, Savoy ' or crop_common_name='Gourd';"):
         oldAnnotation = OldAnnotation(row[0],
                 row[1],
                 row[2],
@@ -84,7 +84,7 @@ def organize(database, workdir, output):
                     description=oldAnnotation.description,
                     source=oldAnnotation.metadata)          
 
-        regex = re.compile("[\w]+/[\w,]*\/([\w\.;]+)+")
+        regex = re.compile("[\w]+/[\w,;]*\/([\w\.;]+)+")
         image.url = regex.match(image.url).group(1)
 
         logging.info("CREATING {}/{}/{} ".format(plant.scientificName.replace(" ", "_"), disease.scientificName.replace(" ", "_"), image.url.replace(" ", "_")))
