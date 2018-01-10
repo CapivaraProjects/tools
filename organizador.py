@@ -91,15 +91,15 @@ def organize(database, workdir, output):
         shutil.copyfile(workdir + "/" + plant.commonName.replace(" ", "_") + "/" + image.url, workdir + "/" + plant.scientificName.replace(" ", "_").replace(";", "") + "/" + disease.scientificName.replace(" ", "_").replace(";", "") + "/" + image.url)
         filehandler.write("INSERT INTO IMAGES(id_disease, url, description, source) VALUES ((SELECT id FROM DISEASES WHERE scientific_name = '{}' LIMIT 1), '{}', '{}', '{}')\n".format(image.disease.scientificName, image.url, image.description, image.source))
 
-        disease.images.push(image)
+        disease.images.append(image)
 
         if (indexDisease == -1):
-            plant.diseases.push(disease)
+            plant.diseases.append(disease)
         else:
             plant.diseases[indexDisease] = disease
 
         if (indexPlant == -1): 
-            plants.push(plant)
+            plants.append(plant)
         else:
             plants[indexPlant] = plant
 
