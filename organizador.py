@@ -65,9 +65,9 @@ def organize(database, workdir, output):
         if oldAnnotation.diseaseCommonName == "" or oldAnnotation.diseaseScientificName == "":
             disease.scientificName = "healthy"
             disease.commonName = "healthy"
-            logging.info("DISEASE: {}".format(disease.scientificName))
 
         indexDisease = searchDiseaseByScientificName(disease.plant, disease.scientificName)
+        logging.info("DISEASE: {}".format(disease.scientificName))
         if (indexDisease == -1):
             logging.info("CREATING {}/{}".format(plant.scientificName.replace(" ", "_"), disease.scientificName.replace(" ", "_")))
             os.system("mkdir -p "+workdir + "/" + plant.scientificName.replace(" ", "_") + "/" + disease.scientificName.replace(" ", "_"))
