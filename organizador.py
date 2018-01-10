@@ -62,7 +62,11 @@ def organize(database, workdir, output):
             plant = plants[indexPlant]
         
         disease = Disease(plant=plant)
-        if oldAnnotation.diseaseCommonName == "" or oldAnnotation.diseaseScientificName == "":
+        if (oldAnnotation.diseaseCommonName == "" or oldAnnotation.diseaseScientificName == ""):
+            disease.scientificName = "healthy"
+            disease.commonName = "healthy"
+
+        if (disease.scientificName == ""):
             disease.scientificName = "healthy"
             disease.commonName = "healthy"
 
