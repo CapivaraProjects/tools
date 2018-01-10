@@ -41,7 +41,7 @@ def organize(database, workdir, output):
     plants = []
 
     for row in cursor.execute(
-            "SELECT id, crop_common_name, crop_scientific_name, disease_common_name, disease_scientific_name, url, description, metadata FROM ANNOTATIONS WHERE crop_common_name='Cabbage (red, white, Savoy)' or crop_common_name='Gourd';"):
+            "SELECT id, crop_common_name, crop_scientific_name, disease_common_name, disease_scientific_name, url, description, metadata FROM ANNOTATIONS;"):
         oldAnnotation = OldAnnotation(row[0],
                 row[1],
                 row[2],
