@@ -55,8 +55,8 @@ def organize(database, workdir, output):
                     commonName=oldAnnotation.cropCommonName)
         indexPlant = searchPlantByScientificName(plants, plant.scientificName)
         if (indexPlant == -1):
-            logging.info("CREATING {}".format(plant.scientificName).replace(" ", "_"))
-            os.system("mkdir -p " + workdir + "/" + plant.scientificName.replace(" ", "_"))
+            logging.info("CREATING {}".format(plant.scientificName).replace(" ", "_").replace(";", ""))
+            os.system("mkdir -p " + workdir + "/" + plant.scientificName.replace(" ", "_").replace(";", ""))
             filehandler.write("INSERT INTO PLANTS(scientific_name, common_name) VALUES ('{}', '{}')\n".format(plant.scientificName, plant.commonName))
         else:
             plant = plants[indexPlant]
@@ -73,8 +73,8 @@ def organize(database, workdir, output):
         indexDisease = searchDiseaseByScientificName(disease.plant, disease.scientificName)
         logging.info("DISEASE: {}".format(disease.scientificName))
         if (indexDisease == -1):
-            logging.info("CREATING {}/{}".format(plant.scientificName.replace(" ", "_"), disease.scientificName.replace(" ", "_")))
-            os.system("mkdir -p "+workdir + "/" + plant.scientificName.replace(" ", "_") + "/" + disease.scientificName.replace(" ", "_"))
+            logging.info("CREATING {}/{}".format(plant.scientificName.replace(" ", "_").replace(";", ""), disease.scientificName.replace(" ", "_").replace(";", "")))
+            os.system("mkdir -p "+workdir + "/" + plant.scientificName.replace(" ", "_").replace(";", "") + "/" + disease.scientificName.replace(" ", "_").replace(";", ""))
             filehandler.write("INSERT INTO DISEASES(id, scientific_name, common_name) VALUES ((SELECT id FROM PLANTS WHERE scientific_name = '{}' LIMIT 1),'{}', '{}')\n".format(disease.plant.scientificName, disease.scientificName, disease.commonName))
         else:
             disease = plant.diseases[indexDisease]
@@ -88,7 +88,7 @@ def organize(database, workdir, output):
         image.url = regex.match(image.url).group(1)
 
         logging.info("CREATING {}/{}/{} ".format(plant.scientificName.replace(" ", "_"), disease.scientificName.replace(" ", "_"), image.url.replace(" ", "_")))
-        shutil.copyfile(workdir + "/" + plant.commonName.replace(" ", "_") + "/" + image.url, workdir + "/" + plant.scientificName.replace(" ", "_") + "/" + disease.scientificName.replace(" ", "_") + "/" + image.url)
+        shutil.copyfile(workdir + "/" + plant.commonName.replace(" ", "_") + "/" + image.url, workdir + "/" + plant.scientificName.replace(" ", "_").replace(";", "") + "/" + disease.scientificName.replace(" ", "_").replace(";", "") + "/" + image.url)
         filehandler.write("INSERT INTO IMAGES(id_disease, url, description, source) VALUES ((SELECT id FROM DISEASES WHERE scientific_name = '{}' LIMIT 1), '{}', '{}', '{}')\n".format(image.disease.scientificName, image.url, image.description, image.source))
 
         disease.images.push(image)
