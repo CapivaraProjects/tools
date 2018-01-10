@@ -41,7 +41,7 @@ def organize(database, workdir, output):
     plants = []
 
     for row in cursor.execute(
-            "SELECT id, crop_common_name, crop_scientific_name, disease_common_name, disease_scientific_name, url, description, metadata FROM ANNOTATIONS;"):
+            "SELECT id, crop_common_name, crop_scientific_name, disease_common_name, disease_scientific_name, url, description, metadata FROM ANNOTATIONS WHERE crop_common_name='Cabbage__red,_white,_Savoy_' or crop_common_name='Gourd';"):
         oldAnnotation = OldAnnotation(row[0],
                 row[1],
                 row[2],
@@ -50,12 +50,13 @@ def organize(database, workdir, output):
                 row[5],
                 row[6],
                 row[7])
+
         plant = Plant(scientificName=oldAnnotation.cropScientificName,
                     commonName=oldAnnotation.cropCommonName)
         indexPlant = searchPlantByScientificName(plants, plant.scientificName)
         if (indexPlant == -1):
-            logging.info("CREATING {}".format(plant.scientificName))
-            os.mkdir(workdir + "/" + plant.scientificName)
+            logging.info("CREATING {}".format(plant.scientificName).replace(" ", "_"))
+            os.mkdir(workdir + "/" + plant.scientificName.replace(" ", "_"))
             filehandler.write("INSERT INTO PLANTS(scientific_name, common_name) VALUES ('{}', '{}')\n".format(plant.scientificName, plant.commonName))
         else:
             plant = plants[indexPlant]
@@ -64,11 +65,12 @@ def organize(database, workdir, output):
         if oldAnnotation.diseaseCommonName == "" or oldAnnotation.diseaseScientificName == "":
             disease.scientificName = "healthy"
             disease.commonName = "healthy"
+            logging.info("DISEASE: {}".format(disease.scientificName))
 
         indexDisease = searchDiseaseByScientificName(disease.plant, disease.scientificName)
         if (indexDisease == -1):
-            logging.info("CREATING {}/{}".format(plant.scientificName, disease.scientificName))
-            os.mkdir(workdir + "/" + plant.scientificName + "/" + disease.scientificName)
+            logging.info("CREATING {}/{}".format(plant.scientificName.replace(" ", "_"), disease.scientificName.replace(" ", "_")))
+            os.mkdir(workdir + "/" + plant.scientificName.replace(" ", "_") + "/" + disease.scientificName.replace(" ", "_"))
             filehandler.write("INSERT INTO DISEASES(id, scientific_name, common_name) VALUES ((SELECT id FROM PLANTS WHERE scientific_name = '{}' LIMIT 1),'{}', '{}')\n".format(disease.plant.scientificName, disease.scientificName, disease.commonName))
         else:
             disease = plant.diseases[indexDisease]
@@ -81,8 +83,8 @@ def organize(database, workdir, output):
         regex = re.compile("[\w]+/[\w,]*\/([\w\.]+)+")
         image.url = regex.match(image.url).group(1)
 
-        logging.info("CREATING {}/{}/{} ".format(plant.scientificName, disease.scientificName, image.url))
-        shutil.copyfile(workdir + "/" + plant.commonName + "/" + image.url, workdir + "/" + plant.scientificName + "/" + disease.scientificName + "/")
+        logging.info("CREATING {}/{}/{} ".format(plant.scientificName.replace(" ", "_"), disease.scientificName.replace(" ", "_"), image.url.replace(" ", "_")))
+        shutil.copyfile(workdir + "/" + plant.commonName.replace(" ", "_") + "/" + image.url, workdir + "/" + plant.scientificName.replace(" ", "_") + "/" + disease.scientificName.replace(" ", "_") + "/" + image.url)
         filehandler.write("INSERT INTO IMAGES(id_disease, url, description, source) VALUES ((SELECT id FROM DISEASES WHERE scientific_name = '{}' LIMIT 1), '{}', '{}', '{}')\n".format(image.disease.scientificName, image.url, image.description, image.source))
 
         disease.images.push(image)
