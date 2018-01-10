@@ -15,7 +15,7 @@ def searchPlantByScientificName(plants, name):
         Method used to realize search in plants list for a name
     """
     for plant in plants:
-        if (plant.scientificName == name):
+        if (plant.commonName == name):
             return plants.index(plant)
 
     return -1
@@ -50,15 +50,19 @@ def organize(database, workdir, output):
                 row[5],
                 row[6],
                 row[7])
+        if (oldAnnotation.url == ""):
+            continue
 
-        plant = Plant(scientificName=oldAnnotation.cropScientificName,
-                    commonName=oldAnnotation.cropCommonName)
-        indexPlant = searchPlantByScientificName(plants, plant.scientificName)
+        indexPlant = searchPlantByScientificName(plants, oldAnnotation.cropCommonName)
+        plant = Plant()
         if (indexPlant == -1):
-            logging.info("CREATING {}".format(plant.scientificName).replace(" ", "_").replace(";", "").replace("(", "_").replace(")", "_").replace("<i>", "").replace("</i>", ""))
-            os.system("mkdir -p " + workdir + "/" + plant.scientificName.replace(" ", "_").replace(";", "").replace("(", "_").replace(")", "_").replace("<i>", "").replace("</i>", ""))
+            plant = Plant(scientificName=oldAnnotation.cropScientificName,
+                    commonName=oldAnnotation.cropCommonName)
+            logging.info("CREATING {}".format(plant.commonName).replace(" ", "_").replace(";", "").replace("(", "_").replace(")", "_").replace("<i>", "").replace("</i>", ""))
+            os.system("mkdir -p " + workdir + "/" + plant.commonName.replace(" ", "_").replace(";", "").replace("(", "_").replace(")", "_").replace("<i>", "").replace("</i>", ""))
             filehandler.write("INSERT INTO PLANTS(scientific_name, common_name) VALUES ('{}', '{}')\n".format(plant.scientificName, plant.commonName))
         else:
+            logging.info("index: {} - plant: {}".format(str(indexPlant), plants[indexPlant].scientificName))
             plant = plants[indexPlant]
         
         disease = Disease(plant=plant, commonName=oldAnnotation.diseaseCommonName, scientificName=oldAnnotation.diseaseScientificName)
@@ -67,24 +71,44 @@ def organize(database, workdir, output):
             disease.commonName = "healthy"
 
         indexDisease = searchDiseaseByScientificName(disease.plant, disease.scientificName)
-        logging.info("DISEASE: {}".format(disease.scientificName))
+        logging.info("DISEASE: {} - {} - {}".format(disease.scientificName, plant.scientificName, indexDisease))
         if (indexDisease == -1):
-            logging.info("CREATING {}/{}".format(plant.scientificName.replace(" ", "_").replace(";", "").replace("(", "_").replace(")", "_").replace("<i>", "").replace("</i>", ""), disease.scientificName.replace(" ", "_").replace(";", "").replace("(", "_").replace(")", "_").replace("<i>", "").replace("</i>", "")))
-            os.system("mkdir -p "+workdir + "/" + plant.scientificName.replace(" ", "_").replace(";", "").replace("(", "_").replace(")", "_").replace("<i>", "").replace("</i>", "") + "/" + disease.scientificName.replace(" ", "_").replace(";", "").replace("(", "_").replace(")", "_").replace("<i>", "").replace("</i>", ""))
+            logging.info("CREATING {}/{}".format(plant.commonName.replace(" ", "_").replace(";", "").replace("(", "_").replace(")", "_").replace("<i>", "").replace("</i>", ""), disease.scientificName.replace(" ", "_").replace(";", "").replace("(", "_").replace(")", "_").replace("<i>", "").replace("</i>", "")))
+            os.system("mkdir -p "+workdir + "/" + plant.commonName.replace(" ", "_").replace(";", "").replace("(", "_").replace(")", "_").replace("<i>", "").replace("</i>", "") + "/" + disease.scientificName.replace(" ", "_").replace(";", "").replace("(", "_").replace(")", "_").replace("<i>", "").replace("</i>", ""))
             filehandler.write("INSERT INTO DISEASES(id, scientific_name, common_name) VALUES ((SELECT id FROM PLANTS WHERE scientific_name = '{}' LIMIT 1),'{}', '{}')\n".format(disease.plant.scientificName, disease.scientificName, disease.commonName))
         else:
             disease = plant.diseases[indexDisease]
                   
         image = Image(disease=disease,
-                    url=oldAnnotation.url,
+                    url=oldAnnotation.url.replace("<i>", "").replace("</i>", ""),
                     description=oldAnnotation.description,
                     source=oldAnnotation.metadata)          
 
-        regex = re.compile("[\w]+/[\w,;]*\/([\w\.;]+)+")
-        image.url = regex.match(image.url).group(1)
+        regex = re.compile("[\w]+/[\w,;\-]*\/([\w\.;\-,]+)+")
+        logging.info(image.url)
+        if (not regex.match(image.url) == None):
+            logging.info(image.url)
+            image.url = regex.match(image.url).group(1)
+            if ("large" in image.url):
+                continue
+        else:
+            logging.info(image.url)
+            continue
 
-        logging.info("CREATING {}/{}/{} ".format(plant.scientificName.replace(" ", "_"), disease.scientificName.replace(" ", "_"), image.url.replace(" ", "_")))
-        shutil.copyfile(workdir + "/" + plant.commonName.replace(" ", "_").replace("(", "_").replace(")", "_").replace("<i>", "").replace("</i>", "") + "/" + image.url, workdir + "/" + plant.scientificName.replace(" ", "_").replace(";", "").replace("(", "_").replace(")", "_").replace("<i>", "").replace("</i>", "") + "/" + disease.scientificName.replace(" ", "_").replace(";", "").replace("(", "_").replace(")", "_").replace("<i>", "").replace("</i>", "") + "/" + image.url)
+        if ("large" in disease.scientificName):
+            continue
+        logging.info("CREATING {}/{}/{} ".format(plant.commonName.replace(" ", "_"), disease.scientificName.replace(" ", "_"), image.url.replace(" ", "_")))
+        os.makedirs(workdir + "/" + plant.commonName.replace(" ", "_").replace(";", "").replace("(", "_").replace(")", "_").replace("<i>", "").replace("</i>", "") + "/" + disease.scientificName.replace(" ", "_").replace(";", "").replace("(", "_").replace(")", "_").replace("<i>", "").replace("</i>", "") + "/", exist_ok=True)
+        dir1 = workdir + "/" + plant.commonName.replace(" ", "_").replace("(", "_").replace(")", "_").replace("<i>", "").replace("</i>", "") + "/" + image.url
+        dir2 = workdir + "/" + plant.commonName.replace(" ", "_").replace(";", "").replace("(", "_").replace(")", "_").replace("<i>", "").replace("</i>", "") + "/" + disease.scientificName.replace(" ", "_").replace(";", "").replace("(", "_").replace(")", "_").replace("<i>", "").replace("</i>", "") + "/" + image.url
+        logging.info(dir1)
+        logging.info(dir2)
+        if("large" in dir2):
+            continue
+        try:
+            shutil.copyfile(dir1,dir2)     
+        except FileNotFoundError:
+            continue
         filehandler.write("INSERT INTO IMAGES(id_disease, url, description, source) VALUES ((SELECT id FROM DISEASES WHERE scientific_name = '{}' LIMIT 1), '{}', '{}', '{}')\n".format(image.disease.scientificName, image.url, image.description, image.source))
 
         disease.images.append(image)
