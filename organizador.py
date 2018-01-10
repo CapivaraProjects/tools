@@ -56,7 +56,7 @@ def organize(database, workdir, output):
         indexPlant = searchPlantByScientificName(plants, plant.scientificName)
         if (indexPlant == -1):
             logging.info("CREATING {}".format(plant.scientificName).replace(" ", "_"))
-            os.mkdir(workdir + "/" + plant.scientificName.replace(" ", "_"))
+            os.system("mkdir -p " + workdir + "/" + plant.scientificName.replace(" ", "_"))
             filehandler.write("INSERT INTO PLANTS(scientific_name, common_name) VALUES ('{}', '{}')\n".format(plant.scientificName, plant.commonName))
         else:
             plant = plants[indexPlant]
@@ -70,7 +70,7 @@ def organize(database, workdir, output):
         indexDisease = searchDiseaseByScientificName(disease.plant, disease.scientificName)
         if (indexDisease == -1):
             logging.info("CREATING {}/{}".format(plant.scientificName.replace(" ", "_"), disease.scientificName.replace(" ", "_")))
-            os.mkdir(workdir + "/" + plant.scientificName.replace(" ", "_") + "/" + disease.scientificName.replace(" ", "_"))
+            os.system("mkdir -p "+workdir + "/" + plant.scientificName.replace(" ", "_") + "/" + disease.scientificName.replace(" ", "_"))
             filehandler.write("INSERT INTO DISEASES(id, scientific_name, common_name) VALUES ((SELECT id FROM PLANTS WHERE scientific_name = '{}' LIMIT 1),'{}', '{}')\n".format(disease.plant.scientificName, disease.scientificName, disease.commonName))
         else:
             disease = plant.diseases[indexDisease]
@@ -80,7 +80,7 @@ def organize(database, workdir, output):
                     description=oldAnnotation.description,
                     source=oldAnnotation.metadata)          
 
-        regex = re.compile("[\w]+/[\w,]*\/([\w\.]+)+")
+        regex = re.compile("[\w]+/[\w,]*\/([\w\.;]+)+")
         image.url = regex.match(image.url).group(1)
 
         logging.info("CREATING {}/{}/{} ".format(plant.scientificName.replace(" ", "_"), disease.scientificName.replace(" ", "_"), image.url.replace(" ", "_")))
