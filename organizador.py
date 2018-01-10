@@ -78,7 +78,7 @@ def organize(database, workdir, output):
                     description=oldAnnotation.description,
                     source=oldAnnotation.metadata)          
 
-        regex = re.compile("l[\w+]+/[\w+]+\/([\w\.]+)+")
+        regex = re.compile("[\w]+/[\w,]+\/([\w\.]+)+")
         image.url = regex.match(image.url).group(1)
 
         logging.info("CREATING {}/{}/{} ".format(plant.scientificName, disease.scientificName, image.url))
