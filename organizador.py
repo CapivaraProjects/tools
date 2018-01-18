@@ -30,8 +30,8 @@ def searchDiseaseByScientificName(plant, name):
 
     return -1
 
-def organize(database, workdir, output):
-    """ (str, str, str) -> Bool
+def organize(database, workdir, output, size):
+    """ (str, str, str, str) -> Bool
         Method used to execute organization of images
     """
     filehandler = open(output, "a")
@@ -39,6 +39,9 @@ def organize(database, workdir, output):
     conn = sqlite3.connect(database)
     cursor = conn.cursor()
     plants = []
+    scriptPlants = ""
+    scriptDiseases = ""
+    scriptImages = ""                                                                                                                                                   
 
     for row in cursor.execute(
             "SELECT id, crop_common_name, crop_scientific_name, disease_common_name, disease_scientific_name, url, description, metadata FROM ANNOTATIONS;"):
@@ -50,23 +53,24 @@ def organize(database, workdir, output):
                 row[5],
                 row[6],
                 row[7])
-        if (oldAnnotation.url == ""):
+        if (oldAnnotation.url == "" or  oldAnnotation.cropScientificName == ""):
             continue
 
         indexPlant = searchPlantByScientificName(plants, oldAnnotation.cropCommonName)
         plant = Plant()
         if (indexPlant == -1):
             plant = Plant(scientificName=oldAnnotation.cropScientificName,
-                    commonName=oldAnnotation.cropCommonName)
+                    commonName=oldAnnotation.cropCommonName, diseases=[])
             logging.info("CREATING {}".format(plant.commonName).replace(" ", "_").replace(";", "").replace("(", "_").replace(")", "_").replace("<i>", "").replace("</i>", ""))
             os.system("mkdir -p " + workdir + "/" + plant.commonName.replace(" ", "_").replace(";", "").replace("(", "_").replace(")", "_").replace("<i>", "").replace("</i>", ""))
-            filehandler.write("INSERT INTO PLANTS(scientific_name, common_name) VALUES ('{}', '{}')\n".format(plant.scientificName, plant.commonName))
+            #filehandler.write("INSERT INTO PLANTS(scientific_name, common_name) VALUES ('{}', '{}')\n".format(plant.scientificName, plant.commonName))
+            scriptPlants += "INSERT INTO PLANTS(scientific_name, common_name) VALUES ('{}', '{}');\n".format(plant.scientificName, plant.commonName);
         else:
             logging.info("index: {} - plant: {}".format(str(indexPlant), plants[indexPlant].scientificName))
             plant = plants[indexPlant]
         
         disease = Disease(plant=plant, commonName=oldAnnotation.diseaseCommonName, scientificName=oldAnnotation.diseaseScientificName)
-        if (oldAnnotation.diseaseCommonName == "" or oldAnnotation.diseaseScientificName == ""):
+        if (oldAnnotation.diseaseCommonName == "" or oldAnnotation.diseaseScientificName == "" or "Healthy" in oldAnnotation.description or "healthy" in oldAnnotation.description):
             disease.scientificName = "healthy"
             disease.commonName = "healthy"
 
@@ -75,7 +79,8 @@ def organize(database, workdir, output):
         if (indexDisease == -1):
             logging.info("CREATING {}/{}".format(plant.commonName.replace(" ", "_").replace(";", "").replace("(", "_").replace(")", "_").replace("<i>", "").replace("</i>", ""), disease.scientificName.replace(" ", "_").replace(";", "").replace("(", "_").replace(")", "_").replace("<i>", "").replace("</i>", "")))
             os.system("mkdir -p "+workdir + "/" + plant.commonName.replace(" ", "_").replace(";", "").replace("(", "_").replace(")", "_").replace("<i>", "").replace("</i>", "") + "/" + disease.scientificName.replace(" ", "_").replace(";", "").replace("(", "_").replace(")", "_").replace("<i>", "").replace("</i>", ""))
-            filehandler.write("INSERT INTO DISEASES(id, scientific_name, common_name) VALUES ((SELECT id FROM PLANTS WHERE scientific_name = '{}' LIMIT 1),'{}', '{}')\n".format(disease.plant.scientificName, disease.scientificName, disease.commonName))
+            scriptDiseases += "INSERT INTO DISEASES(id_plant, scientific_name, common_name) VALUES ((SELECT id FROM PLANTS WHERE scientific_name = '{}' LIMIT 1),'{}', '{}');\n".format(plant.scientificName, disease.scientificName, disease.commonName)
+            #filehandler.write("INSERT INTO DISEASES(id, scientific_name, common_name) VALUES ((SELECT id FROM PLANTS WHERE scientific_name = '{}' LIMIT 1),'{}', '{}')\n".format(disease.plant.scientificName, disease.scientificName, disease.commonName))
         else:
             disease = plant.diseases[indexDisease]
                   
@@ -109,7 +114,8 @@ def organize(database, workdir, output):
             shutil.copyfile(dir1,dir2)     
         except FileNotFoundError:
             continue
-        filehandler.write("INSERT INTO IMAGES(id_disease, url, description, source) VALUES ((SELECT id FROM DISEASES WHERE scientific_name = '{}' LIMIT 1), '{}', '{}', '{}')\n".format(image.disease.scientificName, image.url, image.description, image.source))
+        #filehandler.write("INSERT INTO IMAGES(id_disease, url, description, source) VALUES ((SELECT id FROM DISEASES WHERE scientific_name = '{}' AND id_plant = (SELECT id FROM PLANTS WHERE scientific_name = '{}' LIMIT 1) LIMIT 1), '{}', '{}', '{}')\n".format(image.disease.scientificName, image.disease.plant.scientificName, image.url, image.description, image.source))
+        scriptImages += "INSERT INTO IMAGES(id_disease, url, description, source, size) VALUES ((SELECT id FROM DISEASES WHERE scientific_name = '{}' AND id_plant = (SELECT id FROM PLANTS WHERE scientific_name = '{}' LIMIT 1) LIMIT 1), '{}', '{}', '{}', (SELECT id FROM TYPES WHERE value='{}' AND description='image-size' LIMIT 1));\n".format(disease.scientificName, plant.scientificName, image.url, image.description, image.source, size)
 
         disease.images.append(image)
 
@@ -123,6 +129,9 @@ def organize(database, workdir, output):
         else:
             plants[indexPlant] = plant
 
+    filehandler.write(scriptPlants)
+    filehandler.write(scriptDiseases)
+    filehandler.write(scriptImages)
     filehandler.close()
     return True
 
@@ -133,12 +142,13 @@ if __name__=="__main__":
     parser.add_argument("database", type=str, help="database.db file to connect")
     parser.add_argument("workdir", type=str, help="filepath to workdir")
     parser.add_argument("output", type=str, help="SQL output filepath")
+    parser.add_argument("size", type=str, help="Image size", choices=["thumb", "medium", "large"])
     args = parser.parse_args()
 
     workdir = args.workdir
     if (workdir[len(workdir)-1] == "/"):
         workdir = workdir[:-1]
 
-    if(organize(args.database, workdir, args.output)):
+    if(organize(args.database, workdir, args.output, args.size)):
         print("Finished!")
 
