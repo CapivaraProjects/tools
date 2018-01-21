@@ -1,4 +1,5 @@
-import os, argparse
+import os
+import argparse
 import re
 import sqlite3
 import shutil
@@ -19,6 +20,15 @@ def searchPlantByScientificName(plants, name):
             return plants.index(plant)
 
     return -1
+
+def test_searchPlantByScientificName():
+    """
+        Test function created for analyze searchPlantByScientificName
+    """
+    plants = [Plant(commonName="orange"), 
+            Plant(commonName="banana"), 
+            Plant(commonName="grape") ]
+    assert searchPlantByScientificName(plants, "grape") == 2
 
 def searchDiseaseByScientificName(plant, name):
     """ (Plant, str) -> int
