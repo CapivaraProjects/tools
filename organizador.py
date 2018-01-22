@@ -1,5 +1,7 @@
+
 import os
 import argparse
+
 import re
 import sqlite3
 import shutil
@@ -20,6 +22,7 @@ def searchPlantByScientificName(plants, name):
             return plants.index(plant)
 
     return -1
+
 
 def test_searchPlantByScientificName():
     """
@@ -42,6 +45,7 @@ def searchDiseaseByScientificName(plant, name):
 
 def organize(database, workdir, output, size):
     """ (str, str, str, str) -> Bool
+
         Method used to execute organization of images
     """
     filehandler = open(output, "a")
@@ -49,6 +53,7 @@ def organize(database, workdir, output, size):
     conn = sqlite3.connect(database)
     cursor = conn.cursor()
     plants = []
+    
     scriptPlants = ""
     scriptDiseases = ""
     scriptImages = ""                                                                                                                                                   
@@ -63,6 +68,7 @@ def organize(database, workdir, output, size):
                 row[5],
                 row[6],
                 row[7])
+
         if (oldAnnotation.url == "" or  oldAnnotation.cropScientificName == ""):
             continue
 
@@ -70,6 +76,7 @@ def organize(database, workdir, output, size):
         plant = Plant()
         if (indexPlant == -1):
             plant = Plant(scientificName=oldAnnotation.cropScientificName,
+
                     commonName=oldAnnotation.cropCommonName, diseases=[])
             logging.info("CREATING {}".format(plant.commonName).replace(" ", "_").replace(";", "").replace("(", "_").replace(")", "_").replace("<i>", "").replace("</i>", ""))
             os.system("mkdir -p " + workdir + "/" + plant.commonName.replace(" ", "_").replace(";", "").replace("(", "_").replace(")", "_").replace("<i>", "").replace("</i>", ""))
@@ -80,6 +87,7 @@ def organize(database, workdir, output, size):
             plant = plants[indexPlant]
         
         disease = Disease(plant=plant, commonName=oldAnnotation.diseaseCommonName, scientificName=oldAnnotation.diseaseScientificName)
+
         if (oldAnnotation.diseaseCommonName == "" or oldAnnotation.diseaseScientificName == "" or "Healthy" in oldAnnotation.description or "healthy" in oldAnnotation.description):
             disease.scientificName = "healthy"
             disease.commonName = "healthy"
@@ -118,12 +126,18 @@ def organize(database, workdir, output, size):
         dir2 = workdir + "/" + plant.commonName.replace(" ", "_").replace(";", "").replace("(", "_").replace(")", "_").replace("<i>", "").replace("</i>", "") + "/" + disease.scientificName.replace(" ", "_").replace(";", "").replace("(", "_").replace(")", "_").replace("<i>", "").replace("</i>", "") + "/" + image.url
         logging.info(dir1)
         logging.info(dir2)
+
+        if("large" in dir2):
+            continue
+
         try:
             shutil.copyfile(dir1,dir2)     
         except FileNotFoundError:
             continue
+
         #filehandler.write("INSERT INTO IMAGES(id_disease, url, description, source) VALUES ((SELECT id FROM DISEASES WHERE scientific_name = '{}' AND id_plant = (SELECT id FROM PLANTS WHERE scientific_name = '{}' LIMIT 1) LIMIT 1), '{}', '{}', '{}')\n".format(image.disease.scientificName, image.disease.plant.scientificName, image.url, image.description, image.source))
         scriptImages += "INSERT INTO IMAGES(id_disease, url, description, source, size) VALUES ((SELECT id FROM DISEASES WHERE scientific_name = '{}' AND id_plant = (SELECT id FROM PLANTS WHERE scientific_name = '{}' LIMIT 1) LIMIT 1), '{}', '{}', '{}', (SELECT id FROM TYPES WHERE value='{}' AND description='image-size' LIMIT 1));\n".format(disease.scientificName, plant.scientificName, image.url, image.description, image.source, size)
+
 
         disease.images.append(image)
 
@@ -140,6 +154,7 @@ def organize(database, workdir, output, size):
     filehandler.write(scriptPlants)
     filehandler.write(scriptDiseases)
     filehandler.write(scriptImages)
+
     filehandler.close()
     return True
 
