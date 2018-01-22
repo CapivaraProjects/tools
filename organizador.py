@@ -108,8 +108,6 @@ def organize(database, workdir, output, size):
         dir2 = workdir + "/" + plant.commonName.replace(" ", "_").replace(";", "").replace("(", "_").replace(")", "_").replace("<i>", "").replace("</i>", "") + "/" + disease.scientificName.replace(" ", "_").replace(";", "").replace("(", "_").replace(")", "_").replace("<i>", "").replace("</i>", "") + "/" + image.url
         logging.info(dir1)
         logging.info(dir2)
-        if("large" in dir2):
-            continue
         try:
             shutil.copyfile(dir1,dir2)     
         except FileNotFoundError:
