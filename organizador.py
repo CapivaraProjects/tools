@@ -6,10 +6,10 @@ import re
 import sqlite3
 import shutil
 import logging
-from capivaraprojects.greeneyes.models.OldAnnotation import OldAnnotation
-from capivaraprojects.greeneyes.models.Plant import Plant
-from capivaraprojects.greeneyes.models.Disease import Disease
-from capivaraprojects.greeneyes.models.Image import Image
+from models.OldAnnotation import OldAnnotation
+from models.Plant import Plant
+from models.Disease import Disease
+from models.Image import Image
 
 logging.basicConfig(filename='image_path_organizer.log', format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
