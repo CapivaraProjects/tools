@@ -30,14 +30,16 @@ class Crypto:
         ciphred['salt'] = base64.b64encode(ciphred.get('salt')).decode('utf-8')
         ciphred['iv'] = base64.b64encode(ciphred.get('iv')).decode('utf-8')
 
-        return json.dumps(ciphred)
+        return base64.b64encode(bytes(json.dumps(ciphred), 'utf-8')).decode()
 
     def decrypt(self, salt, ciphredText):
         """
         (String, String) -> String
         Decrypt a text
         """
-        ciphred = json.loads(ciphredText)
+        ciphred = json.loads(base64.b64decode(
+                    ciphredText.encode('utf-8')).decode(
+                        'utf-8'))
         ciphred['ct'] = base64.b64decode(ciphred.get('ct'))
         ciphred['salt'] = base64.b64decode(ciphred.get('salt'))
         ciphred['iv'] = base64.b64decode(ciphred.get('iv'))
