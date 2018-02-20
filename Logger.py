@@ -15,6 +15,6 @@ class Logger:
         """
         """
         if config != 'TEST':
-        """
+        """ 
         logger = str(json.dumps(models.Logger.Logger(type, message, function, obs, config).__dict__))
         return requests.post(url, data=logger).text
