@@ -34,9 +34,9 @@ for plant_dir in ${SOURCE_DIR}/*; do # Apple
 					mkdir -p ${plant_sample}
 					echo "coping from ${candidate_class} to ${plant_sample})"
 					if [ "${TEST}" -eq "${IS_TEST}" ] ; then
-						cp -r $(ls -1 ${candidate_class}/*| sort -R | head -2) ${plant_sample}
+						cp -r $(ls -1 ${candidate_class}/* | sort -R | head -2) ${plant_sample}
 					else
-						cp -r $(ls -1 ${candidate_class}| sort -R | head -${NIMAEGS}) ${plant_sample}
+						cp -r $(ls -1 ${candidate_class}/* | sort -R | head -${NIMAGES}) ${plant_sample}
 					fi
 					
 				fi
