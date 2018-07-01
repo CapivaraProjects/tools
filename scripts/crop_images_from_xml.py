@@ -49,8 +49,8 @@ def crop_images_from_xml(xml, output):
             exist_ok=True)
         bndbox = obj['bndbox']
         crop = img[
-            int(bndbox['ymin']): int(bndbox['ymin']) + int(bndbox['ymax']),
-            int(bndbox['xmin']): int(bndbox['xmin']) + int(bndbox['xmax'])]
+            int(bndbox['ymin']):int(bndbox['ymax']),
+            int(bndbox['xmin']):int(bndbox['xmax'])]
         cv2.imwrite(
             os.path.join(
                 output,
