@@ -37,11 +37,37 @@ def crop_images_from_xml(xml, output):
     """
     logging.info('reading xml')
     xml_content = read_xml(xml)
+    print(xml_content)
     logging.info('reading img')
     img = cv2.imread(xml_content['annotation']['path'])
     objs = {}
     logging.info('croping...')
-    for obj in xml_content['annotation']['object']:
+    logging.info('annotations: %s' % str(type(xml_content['annotation']['object'])))
+    if 'list' in str(type(xml_content['annotation']['object'])):
+        for obj in xml_content['annotation']['object']:
+            os.makedirs(
+                os.path.join(
+                    output,
+                    obj['name']),
+                exist_ok=True)
+            bndbox = obj['bndbox']
+            crop = img[
+                int(bndbox['ymin']):int(bndbox['ymax']),
+                int(bndbox['xmin']):int(bndbox['xmax'])]
+            cv2.imwrite(
+                os.path.join(
+                    output,
+                    obj['name'],
+                    str(uuid.uuid4()) + '.jpg'),
+                crop)
+            if obj['name'] not in objs:
+                objs[obj['name']] = []
+            objs[obj['name']].append([bndbox['xmin'],
+                                      bndbox['xmax'],
+                                      bndbox['ymin'],
+                                      bndbox['ymax']])
+    else:
+        obj = xml_content['annotation']['object']
         os.makedirs(
             os.path.join(
                 output,
